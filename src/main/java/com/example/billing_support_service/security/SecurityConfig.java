@@ -22,14 +22,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/chatbot/**").permitAll()
-                        // Web-UI calls these endpoints from the browser / server-side Feign without an Authorization header.
-                        // For production, prefer securing these with gateway/service-to-service auth.
-                        .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }

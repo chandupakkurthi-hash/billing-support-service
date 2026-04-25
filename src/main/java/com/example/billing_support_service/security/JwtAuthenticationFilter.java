@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        if (isPublicRequest(request.getRequestURI())) {
+        if (isPublicRequest(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,8 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String email = jwtService.extractEmail(token);
+        Long userId = jwtService.extractUserId(token);
         String role = jwtService.extractRole(token);
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank() || userId == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
@@ -55,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 : (role.startsWith("ROLE_") ? role : "ROLE_" + role);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                email,
+                new AuthenticatedUser(userId, email),
                 null,
                 List.of(new SimpleGrantedAuthority(authority))
         );
@@ -65,10 +66,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isPublicRequest(String path) {
+    private boolean isPublicRequest(HttpServletRequest request) {
+        String path = request.getRequestURI();
         if (path == null) return false;
-        return path.startsWith("/actuator")
-                || path.startsWith("/chatbot")
-                || path.startsWith("/api/");
+        if (path.startsWith("/actuator")) return true;
+        if (path.startsWith("/chatbot")) return true;
+        if ("/error".equals(path)) return true;
+        return false;
     }
 }
