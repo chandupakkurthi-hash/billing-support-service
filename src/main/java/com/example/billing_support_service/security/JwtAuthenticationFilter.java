@@ -69,8 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublicRequest(HttpServletRequest request) {
         String path = request.getRequestURI();
         if (path == null) return false;
-        if (path.startsWith("/actuator")) return true;
-        if (path.startsWith("/chatbot")) return true;
+        if (path != null && path.contains("/actuator")) return true;
+        if (path != null && path.startsWith("/chatbot")) return true;
         if ("/error".equals(path)) return true;
         return false;
     }
